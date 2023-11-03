@@ -18,12 +18,28 @@ public class ChatServiceImpl implements ChatService{
     public Chat findChat(FindChatRequest findChatRequest) {
         Optional<Chat>chat = chatRepository
                 .findChatByChatNameContainingAndParticipantIn(findChatRequest
-                        .getChatName(),findChatRequest.getParticipant());
-        return chat.orElse(null);
+                        .getFirstChatName(),findChatRequest.getParticipant());
+
+        if(chat.isPresent()) return chat.get();
+        Optional<Chat> repeatedChat = recheckRepo(findChatRequest);
+        return repeatedChat.orElse(null);
+    }
+
+    @Override
+    public void delete(Chat chat) {
+        chatRepository.delete(chat);
     }
 
     @Override
     public void createChat(Chat chat) {
         chatRepository.save(chat);
+
     }
+    private Optional<Chat> recheckRepo(FindChatRequest findChatRequest){
+        return chatRepository.findChatByChatNameContainingAndParticipantIn(
+                findChatRequest.getSecondChatName(),
+                findChatRequest.getParticipant());
+    }
+
+
 }

@@ -1,9 +1,11 @@
 package com.example.demo.services;
 
 import com.example.demo.data.models.Chat;
+import com.example.demo.data.models.Message;
 import com.example.demo.data.models.User;
 import com.example.demo.data.repository.UserRepository;
 import com.example.demo.dtos.*;
+import com.example.demo.exception.ChatNotFoundException;
 import com.example.demo.exception.UserAlreadyExistException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -60,21 +62,36 @@ public class UserServiceImpl implements UserService{
 
     @Override
     public void sendMessage(SendMessageRequest sendMessageRequest) {
-        CreateChatRequest createChatRequest = new CreateChatRequest();
-        createChatRequest.setFirstUser(sendMessageRequest.getFrom());
-        createChatRequest.setSecondUser(sendMessageRequest.getTo());
-
-        FindChatRequest findChatRequest = new FindChatRequest();
-        findChatRequest.setChatName(sendMessageRequest.getFrom() + " " + sendMessageRequest.getTo());
-        findChatRequest.setParticipant(List
-                .of(findByEmail(sendMessageRequest.getFrom())
-                        , findByEmail(sendMessageRequest.getTo())));
-
-        Chat chat = findChat(findChatRequest);
+        CreateChatRequest createChatRequest = map(sendMessageRequest);
+        Chat chat = findChatWithUser(sendMessageRequest.getFrom(), sendMessageRequest.getTo());
 
         if (chat == null) chat = createChat(createChatRequest);
         postMessage(sendMessageRequest, chat);
 
+    }
+
+    @Override
+    public void deleteMessage(DeleteMessageRequest deleteMessage) {
+        FindMessageRequest findMessageRequest = new FindMessageRequest();
+        Chat chat = findChatWithUser(deleteMessage.getFrom(), deleteMessage.getTo());
+
+        validateChat(chat);
+
+        findMessageRequest.setChatId(chat.getId());
+        findMessageRequest.setMessageBody(deleteMessage.getMessageBody());
+        Message message = messageService.findMessage(findMessageRequest);
+        messageService.delete(message);
+    }
+
+    private static void validateChat(Chat chat){
+        if (chat == null) throw new ChatNotFoundException("Chat not found");
+    }
+
+    @Override
+    public void deleteChat(DeleteChatRequest deleteChatRequest) {
+        Chat chat = findChatWithUser(deleteChatRequest.getFrom(), deleteChatRequest.getTo());
+        validateChat(chat);
+        chatService.delete(chat);
     }
 
 
@@ -87,6 +104,20 @@ public class UserServiceImpl implements UserService{
         messageService.sendMessage(sendMessageRequest, chat);
     }
 
+    private Chat findChatWithUser(String firstUser, String secondUser){
+        FindChatRequest findChatRequest =new FindChatRequest();
+         findChatRequest.setFirstChatName(firstUser + " " + secondUser);
+         findChatRequest.setSecondChatName(secondUser + " " + firstUser);
+         findChatRequest.setParticipant(List.of(findByEmail(firstUser), findByEmail(secondUser)));
+        return findChat(findChatRequest);
+    }
+
+    public List<String> viewMessages(String firstUser, String secondUser) {
+        Chat foundChat = findChatWithUser(firstUser, secondUser);
+        validateChat(foundChat);
+
+        return messageService.findAllMessages(foundChat);
+    }
 
 
 

@@ -2,10 +2,9 @@ package com.example.demo.services;
 
 import com.example.demo.data.models.Chat;
 import com.example.demo.data.models.User;
-import com.example.demo.dtos.CreateChatRequest;
-import com.example.demo.dtos.RegisterUserRequest;
-import com.example.demo.dtos.RegisterUserResponse;
-import com.example.demo.dtos.SendMessageRequest;
+import com.example.demo.dtos.*;
+
+import java.util.List;
 
 public interface UserService {
 
@@ -14,4 +13,8 @@ public interface UserService {
 
     User findByEmail(String username);
     void sendMessage(SendMessageRequest sendMessageRequest);
+    void deleteMessage(DeleteMessageRequest deleteMessageRequest);
+    void deleteChat(DeleteChatRequest deleteChatRequest);
+
+    List<String> viewMessages(String firstUser, String secondUser);
 }

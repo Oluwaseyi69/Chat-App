@@ -8,7 +8,7 @@ import java.time.LocalDate;
 
 @Data
 @Document("Messages")
-public class Message {
+public class  Message {
     @Id
     private String id;
     private LocalDate dateCreated;

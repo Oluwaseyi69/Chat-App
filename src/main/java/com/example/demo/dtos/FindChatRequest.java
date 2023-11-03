@@ -7,6 +7,7 @@ import java.util.List;
 
 @Data
 public class FindChatRequest {
-    private String chatName;
+    private String FirstChatName;
+    private String SecondChatName;
     private List<User>participant;
 }
